@@ -12,6 +12,7 @@
     "@clerk/nextjs": "^6.26.0",
     "@heroui/system": "^2.4.20",
     "@hookform/resolvers": "^5.2.0",
+    "@imagekit/next": "^2.1.2",
     "@neondatabase/serverless": "^1.0.1",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-slot": "^1.2.3",
