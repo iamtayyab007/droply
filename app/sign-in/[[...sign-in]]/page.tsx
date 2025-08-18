@@ -1,6 +1,5 @@
-import Signup from "@/components/Signup";
+import Signin from "@/components/sign-in";
 import React from "react";
-
 import {
   Card,
   CardAction,
@@ -16,13 +15,13 @@ function page() {
     <div className="min-h-screen flex items-center justify-center">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Signup</CardTitle>
+          <CardTitle>Sign In</CardTitle>
           <CardDescription>
-            Enter your email and password below to signup
+            Enter your email and password below to login
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Signup />
+          <Signin />
         </CardContent>
       </Card>
     </div>

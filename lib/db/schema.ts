@@ -17,14 +17,14 @@ export const files = pgTable("files", {
   type: text("type").notNull(), // folder
   // storage information
   fileUrl: text("file_url").notNull(),
-  thumbnailUrl: text("thumbnail_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
   // ownership
   userId: uuid("user_id").notNull(),
   parentId: uuid("parent_id"),
   // file/folder flags
   isFolder: boolean("is_folder").notNull().default(false),
-  is_starred: boolean("is_starred").notNull().default(false),
-  is_trash: boolean("is_trash").notNull().default(false),
+  isStarred: boolean("is_starred").notNull().default(false),
+  isTrash: boolean("is_trash").notNull().default(false),
   // timestamps
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -40,5 +40,5 @@ export const filesRelations = relations(files, ({ one, many }) => ({
 
 // type definitions
 
-export const File = typeof files.$inferSelect;
-export const NewFile = typeof files.$inferInsert;
+export type File = typeof files.$inferSelect;
+export type NewFile = typeof files.$inferInsert;

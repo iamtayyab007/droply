@@ -39,7 +39,7 @@ function Signin() {
       });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/");
+        router.push("/dashboard");
       }
 
       console.log(result);
