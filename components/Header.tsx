@@ -5,14 +5,23 @@ import Image from "next/image";
 
 const Header = () => {
   const { user, isLoaded, isSignedIn } = useUser();
-  console.log("this is the user", user);
 
   if (!isLoaded) {
-    return <div>Loading...</div>;
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <p className="mt-4 text-gray-600 text-lg">Loading your experience...</p>
+    </div>;
   }
 
   if (!isSignedIn) {
-    return <div>Sign in to view this page</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <p className="mt-4 text-gray-600 text-lg">
+          sign in to your view your dashboard
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -22,7 +31,7 @@ const Header = () => {
         justifyContent: "space-between",
         padding: 20,
       }}
-      className="border-b-2"
+      className="border-b-2 sticky top-0 z-50 bg-black shadow-md"
     >
       <div className="flex items-center gap-2">
         {" "}

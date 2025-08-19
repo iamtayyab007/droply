@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const queryUserId = searchParams.get("userId");
     const parentId = searchParams.get("parentId");
-
+    console.log("id", queryUserId);
     if (!queryUserId || queryUserId !== userId) {
       return NextResponse.json(
         {

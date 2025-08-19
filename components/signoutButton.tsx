@@ -8,7 +8,10 @@ export const SignOutButton = () => {
   return (
     // Clicking this button signs out a user
     // and redirects them to the home page "/".
-    <button onClick={() => signOut({ redirectUrl: "/sign-in" })}>
+    <button
+      onClick={() => signOut({ redirectUrl: "/sign-in" })}
+      className="cursor-pointer"
+    >
       Sign out
     </button>
   );
