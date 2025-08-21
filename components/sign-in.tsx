@@ -41,8 +41,6 @@ function Signin() {
         await setActive({ session: result.createdSessionId });
         router.push("/dashboard");
       }
-
-      console.log(result);
     } catch (err) {
       // See https://clerk.com/docs/custom-flows/error-handling
 

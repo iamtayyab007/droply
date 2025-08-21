@@ -1,6 +1,8 @@
 "use client";
-
-import { auth } from "@clerk/nextjs/server";
+import { useState, useRef } from "react";
+import Image from "next/image";
+import { UploadCloud } from "lucide-react";
+import axios from "axios";
 import {
   ImageKitAbortError,
   ImageKitInvalidRequestError,
@@ -8,164 +10,174 @@ import {
   ImageKitUploadNetworkError,
   upload,
 } from "@imagekit/next";
-import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import toast from "react-hot-toast";
+import { useAuth, useUser } from "@clerk/nextjs";
 
-const Uploader = async () => {
-  const [progress, setProgress] = useState(0);
-  const [fileName, setFileName] = useState("No File Chosen");
+type AuthParams = {
+  signature: string;
+  expire: number;
+  token: string;
+  publicKey: string;
+};
+
+export default function FileUploadBox() {
+  const { getToken } = useAuth();
+  const [preview, setPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [progress, setProgress] = useState(0);
+  const [showProgressBar, setShowProgressBar] = useState(false);
+  const [fileName, setFileName] = useState<string | "">("");
 
-  const { userId } = await auth();
+  const abortController = new AbortController();
 
-  //const abortController = new AbortController();
+  const { user } = useUser();
+  const userId = user?.id;
 
-  /**
-   * Fetch authentication parameters from the backend API.
-   */
+  // imagekit authenticator
 
-  // const authenticator = async () => {
-  //   try {
-  //     const response = await fetch("/api/imagekit-auth");
+  const authenticator = async () => {
+    try {
+      const response = await axios.get("/api/imagekit-auth");
+      return response.data;
+    } catch (error: any) {
+      console.log(error?.response?.message);
+    }
+  };
 
-  //     if (!response.ok) {
-  //       const errorText = await response.text();
-  //       throw new Error(
-  //         `Request failed with status ${response.status}: ${errorText}`
-  //       );
-  //     }
+  // Handle click on image area
+  const handleClick = () => {
+    fileInputRef.current?.click();
+  };
 
-  //     const data = await response.json();
-  //     const { signature, expire, token } = data;
+  // Handle file selection
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
 
-  //     if (!signature || !expire || !token) {
-  //       throw new Error("Missing authentication data from server");
-  //     }
+    if (file) {
+      setFileName(file.name);
+    }
 
-  //     return { signature, expire, token };
-  //   } catch (error) {
-  //     console.error("Authentication error:", error);
-  //     throw new Error("Authentication request failed");
-  //   }
-  // };
-
-  /**
-   * Handle file upload.
-   */
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   const handleUpload = async () => {
+    setShowProgressBar(true);
     const fileInput = fileInputRef.current;
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-      alert("Please select a file to upload");
+      alert("There is no file, please select a file.");
+      setShowProgressBar(false);
       return;
     }
-    const file = fileInput.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
+    const file = fileInput.files?.[0];
 
-    // let authParams;
-    // try {
-    //   authParams = await authenticator();
-    // } catch (authError) {
-    //   console.error("Failed to authenticate for upload:", authError);
-    //   return;
-    // }
-    // const { signature, expire, token } = authParams;
+    let authParams = await authenticator();
+    console.log("authparams", authParams);
+    const { signature, expire, token, publicKey } = authParams;
 
-    // // ✅ Get public key from environment variable
-    // const publicKey = process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY;
-
-    // if (!publicKey) {
-    //   console.error("Missing NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY in environment");
-    //   return;
-    // }
-
-    //   try {
-    //     const uploadResponse = await upload({
-    //       file,
-    //       fileName: file.name,
-    //       publicKey,
-    //       signature,
-    //       token,
-    //       expire,
-    //       onProgress: (event) => {
-    //         setProgress((event.loaded / event.total) * 100);
-    //       },
-    //       abortSignal: abortController.signal,
-    //     });
-    //     console.log("Upload response:", uploadResponse);
-    //     toast.success("File uploaded successfully!");
-    //   } catch (error) {
-    //     if (error instanceof ImageKitAbortError) {
-    //       toast.error(`Something went wrong! ${error.message}`);
-    //       console.error("Upload aborted:", error.reason);
-    //     } else if (error instanceof ImageKitInvalidRequestError) {
-    //       console.error("Invalid request:", error.message);
-    //     } else if (error instanceof ImageKitUploadNetworkError) {
-    //       console.error("Network error:", error.message);
-    //     } else if (error instanceof ImageKitServerError) {
-    //       console.error("Server error:", error.message);
-    //     } else {
-    //       console.error("Upload error:", error);
-    //     }
-    //   }
-    // };
-
-    const handleChange = () => {
-      const fileInput = fileInputRef.current;
-      if (fileInput && fileInput.files && fileInput.files.length > 0) {
-        // Get the name of the first selected file
-        const fileNameSpace = fileInput.files[0].name;
-        setFileName(fileNameSpace);
+    try {
+      const uploadResponse = await upload({
+        expire,
+        token,
+        signature,
+        publicKey,
+        file,
+        fileName: file.name,
+        onProgress: (event) => {
+          setProgress((event.loaded / event.total) * 100);
+        },
+        // Abort signal to allow cancellation of the upload if needed.
+        abortSignal: abortController.signal,
+      });
+      console.log("imagekitresponse", uploadResponse);
+      const tokenBearer = await getToken();
+      const response = await axios.post(
+        "/api/upload",
+        {
+          userId,
+          imagekit: uploadResponse,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${tokenBearer}`, // ✅ Attach token
+          },
+        }
+      );
+      console.log("response", response);
+    } catch (error: any) {
+      // Handle specific error types provided by the ImageKit SDK.
+      if (error instanceof ImageKitAbortError) {
+        console.error("Upload aborted:", error.reason);
+      } else if (error instanceof ImageKitInvalidRequestError) {
+        console.error("Invalid request:", error.message);
+      } else if (error instanceof ImageKitUploadNetworkError) {
+        console.error("Network error:", error.message);
+      } else if (error instanceof ImageKitServerError) {
+        console.error("Server error:", error.message);
+      } else {
+        // Handle any other errors that may occur.
+        console.error("Upload error:", error);
       }
-    };
-    return (
-      <>
-        <div className="image-upload flex items-center gap-2">
-          <label htmlFor="file-input">
-            <Image
-              src="/upload-icon.png"
-              alt="icon-upload"
-              height={50}
-              width={50}
-              className="cursor-pointer"
-            />
-          </label>
-
-          <input
-            id="file-input"
-            style={{ display: "none" }}
-            type="file"
-            ref={fileInputRef}
-            onChange={handleChange}
-          />
-
-          <p>{fileName}</p>
-
-          <button
-            type="button"
-            onClick={handleUpload}
-            className="bg-gray-700 rounded-2xl p-3 cursor-pointer"
-          >
-            Upload file
-          </button>
-        </div>
-        <br />
-        {fileName === "No File Chosen" ? (
-          ""
-        ) : (
-          <div className="flex items-center gap-2">
-            Upload progress:
-            <progress
-              value={progress}
-              max={100}
-              style={{ accentColor: "#ff5733" }}
-            ></progress>
-            {progress ? progress.toFixed() + "%" : ""}
-          </div>
-        )}
-      </>
-    );
+    }
   };
-};
-export default Uploader;
+
+  const handleCancel = () => {
+    setPreview(null);
+  };
+  return (
+    <div className="flex flex-col items-center gap-4">
+      {/* Hidden input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+      />
+      {/* Upload box */}
+      <div
+        onClick={handleClick}
+        className="w-48 h-48 border-2 border-dashed border-gray-400 rounded-xl flex flex-col justify-center items-center gap-3 cursor-pointer hover:border-blue-500 transition relative"
+      >
+        {preview ? (
+          <>
+            <div className="absolute right-1 top-0">
+              <button onClick={handleCancel} className="cursor-pointer">
+                X
+              </button>
+            </div>
+            <img
+              src={preview}
+              alt="Preview"
+              className="w-40 h-40 object-cover rounded shadow-md"
+            />
+          </>
+        ) : (
+          <>
+            <UploadCloud className="w-10 h-10 text-gray-500 mb-2" />
+            <p className="text-gray-600 text-sm">Click to upload</p>
+            <p className="text-gray-400 text-xs">(PNG, JPG up to 5MB)</p>
+          </>
+        )}
+      </div>
+      {fileName}
+      {showProgressBar && (
+        <div className="flex items-center gap-2">
+          {" "}
+          Upload Progress: <progress value={progress} max={100}></progress>
+          {progress.toFixed()}%
+        </div>
+      )}
+
+      <button
+        className="bg-green-600 rounded-xl p-3 cursor-pointer hover:bg-gray-700"
+        onClick={handleUpload}
+      >
+        Upload
+      </button>
+    </div>
+  );
+}

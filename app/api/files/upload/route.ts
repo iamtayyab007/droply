@@ -6,7 +6,6 @@ import { files } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
-import { unique } from "drizzle-orm/gel-core";
 
 // imagekit credentials
 const imagekit = new ImageKit({
@@ -26,7 +25,16 @@ export async function POST(request: NextRequest) {
 
     const file = formData.get("file") as File;
     const formUserId = formData.get("userId") as string;
-    const parentId = (formData.get("parentId") as string) || null;
+    let parentId = (formData.get("parentId") as string) || null;
+
+    if (
+      !parentId ||
+      parentId === "null" ||
+      parentId === "undefined" ||
+      parentId === ""
+    ) {
+      parentId = null;
+    }
 
     if (formUserId !== userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

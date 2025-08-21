@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
     //parse request body
     const body = await request.json();
     const { imagekit, userId: bodyUserId } = body;
+    console.log(imagekit);
     if (bodyUserId !== userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
     const fileData = {
       name: imagekit.name || "untitled",
-      path: imagekit.path || `/droply/${userId}/${imagekit.name}`,
+      path: imagekit.filePath || `/droply/${userId}/${imagekit.name}`,
       size: imagekit.size || 0,
       type: imagekit.fileType || "image",
       fileUrl: imagekit.url,
@@ -35,13 +36,14 @@ export async function POST(request: NextRequest) {
       isStarred: false,
       isTrash: false,
     };
-
+    console.log(fileData);
     const [newFile] = await db.insert(files).values(fileData).returning();
     return NextResponse.json(newFile);
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Upload API Error:", error);
     return NextResponse.json(
-      { error: "Failed to save info to database" },
-      { status: 401 }
+      { error: error.message || "Internal server error" },
+      { status: 500 }
     );
   }
 }

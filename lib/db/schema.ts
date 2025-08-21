@@ -19,7 +19,7 @@ export const files = pgTable("files", {
   fileUrl: text("file_url").notNull(),
   thumbnailUrl: text("thumbnail_url"),
   // ownership
-  userId: uuid("user_id").notNull(),
+  userId: text("user_id").notNull(),
   parentId: uuid("parent_id"),
   // file/folder flags
   isFolder: boolean("is_folder").notNull().default(false),
