@@ -4,17 +4,28 @@ import Uploader from "@/components/Uploader";
 import UploadFolder from "@/components/UploadFolder";
 import { cn } from "@/lib/utils";
 import { useUser } from "@clerk/nextjs";
+import axios from "axios";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const Dashboard = () => {
   const [activeState, setActiveState] = useState("");
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const userImage = user?.imageUrl;
   const userEmailAddress = user?.primaryEmailAddress?.emailAddress;
   const emailVerification = user?.primaryEmailAddress?.verification.status;
   const accountStatus = user?.id ? "Active" : "unactive";
 
+  const fetchUserData = async () => {
+    const response = await axios.get(`/api/files?userId=${user?.id}`);
+    const result = response.data;
+    console.log("data", result);
+  };
+
+  useEffect(() => {
+    if (!isLoaded || !user) return;
+    fetchUserData();
+  }, [user, isLoaded]);
   return (
     <>
       {/* <div>
