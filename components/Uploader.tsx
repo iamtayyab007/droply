@@ -127,6 +127,7 @@ export default function FileUploadBox() {
 
   const handleCancel = () => {
     setPreview(null);
+    setProgress(0);
   };
   return (
     <div className="flex flex-col items-center gap-4">
@@ -165,9 +166,9 @@ export default function FileUploadBox() {
       </div>
       {fileName}
       {showProgressBar && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {" "}
-          Upload Progress: <progress value={progress} max={100}></progress>
+          Uploading: <progress value={progress} max={100}></progress>
           {progress.toFixed()}%
         </div>
       )}
