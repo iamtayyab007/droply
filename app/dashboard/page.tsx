@@ -1,5 +1,8 @@
 "use client";
+import AllFiles from "@/components/AllFiles";
 import { SignOutButton } from "@/components/signoutButton";
+import Starred from "@/components/Starred";
+import Trash from "@/components/Trash";
 import FilesTable from "@/components/ui/FilesTable";
 import Uploader from "@/components/Uploader";
 import UploadFolder from "@/components/UploadFolder";
@@ -9,56 +12,57 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import Image from "next/image";
 import React, { CSSProperties, useState } from "react";
+import { FaStar, FaTrash } from "react-icons/fa";
 import { ClipLoader } from "react-spinners";
 
 const Dashboard = () => {
   const [activeState, setActiveState] = useState("");
-
+  const [isComponentActive, setIsComponentActive] = useState("");
   const { user, isLoaded } = useUser();
   const userImage = user?.imageUrl;
   const userEmailAddress = user?.primaryEmailAddress?.emailAddress;
   const emailVerification = user?.primaryEmailAddress?.verification.status;
   const accountStatus = user?.id ? "Active" : "unactive";
 
-  const fetchFiles = async ({ queryKey }: { queryKey: string[] }) => {
-    const [_key, userId, parentId] = queryKey;
-    try {
-      const res = await axios.get(
-        `/api/files?userId=${userId}&parentId=${parentId || ""}`
-      );
-      return res.data;
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  // const fetchFiles = async ({ queryKey }: { queryKey: string[] }) => {
+  //   const [_key, userId, parentId] = queryKey;
+  //   try {
+  //     const res = await axios.get(
+  //       `/api/files?userId=${userId}&parentId=${parentId || ""}`
+  //     );
+  //     return res.data;
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
-  const userId = user?.id ?? "";
-  const parentId = null;
+  // const userId = user?.id ?? "";
+  // const parentId = null;
 
-  const {
-    data = [],
-    isLoading,
-    isError,
-    isFetching,
-  } = useQuery({
-    queryKey: ["files", userId, parentId!],
-    queryFn: fetchFiles,
-    enabled: isLoaded && !!userId, // still safe
-    refetchInterval: 5000,
-    refetchOnMount: true,
-    staleTime: 0,
-  });
+  // const {
+  //   data = [],
+  //   isLoading,
+  //   isError,
+  //   isFetching,
+  // } = useQuery({
+  //   queryKey: ["files", userId, parentId!],
+  //   queryFn: fetchFiles,
+  //   enabled: isLoaded && !!userId, // still safe
+  //   refetchInterval: 5000,
+  //   refetchOnMount: true,
+  //   staleTime: 0,
+  // });
 
-  if (!isLoaded) return <p>Loading user...</p>;
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-40">
-        <ClipLoader size={40} color="#4F46E5" />
-        <span className="ml-3 text-gray-600 text-lg">Loading files...</span>
-      </div>
-    );
-  }
-  if (isError) return <p>Failed to load files.</p>;
+  // if (!isLoaded) return <p>Loading user...</p>;
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex justify-center items-center h-40">
+  //       <ClipLoader size={40} color="#4F46E5" />
+  //       <span className="ml-3 text-gray-600 text-lg">Loading files...</span>
+  //     </div>
+  //   );
+  // }
+  // if (isError) return <p>Failed to load files.</p>;
 
   // const fetchUserData = async () => {
   //   const response = await axios.get(`/api/files?userId=${user?.id}`);
@@ -127,7 +131,7 @@ const Dashboard = () => {
               </section>
               {/* right Section */}
               <section className="flex flex-col w-[70%] border-1 border-gray-800 p-2">
-                <div className="flex items-center gap-2 border-b-2 p-2">
+                <div className="flex items-center gap-2 p-2">
                   <Image
                     src="/file-icon.png"
                     alt="file-icon"
@@ -137,7 +141,57 @@ const Dashboard = () => {
                   />
                   <h2 className="text-xl font-semibold mb-4">Your Files</h2>
                 </div>
-                <div className="flex justify-between p-5 border-b-2 border-gray-700 mb-5">
+                <div className="flex flex-row justify-around p-3">
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 cursor-pointer",
+                      isComponentActive === "allfiles"
+                        ? "border-b-1 border-blue-500 text-blue-500"
+                        : ""
+                    )}
+                    onClick={() => {
+                      setIsComponentActive("allfiles");
+                    }}
+                  >
+                    <Image
+                      src="/file-icon.png"
+                      alt="file-icon"
+                      width={20}
+                      height={20}
+                      className="filter invert brightness-0 hue-rotate-180"
+                    />
+                    <h2>All Files</h2>
+                  </div>
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 cursor-pointer",
+                      isComponentActive === "starred"
+                        ? "border-b-1 border-blue-500 text-blue-500"
+                        : ""
+                    )}
+                    onClick={() => {
+                      setIsComponentActive("starred");
+                    }}
+                  >
+                    <FaStar />
+                    <h2>Starred</h2>
+                  </div>
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 cursor-pointer",
+                      isComponentActive === "trash"
+                        ? "border-b-1 border-blue-500 text-blue-500"
+                        : ""
+                    )}
+                    onClick={() => {
+                      setIsComponentActive("trash");
+                    }}
+                  >
+                    <FaTrash />
+                    <h2>Trash</h2>
+                  </div>
+                </div>
+                {/* <div className="flex justify-between p-5 border-b-2 border-gray-700 mb-5">
                   <h2 className="font-bold">All Files</h2>
                   <button className="bg-gray-700 text-white rounded-xl p-2">
                     Refresh
@@ -145,7 +199,11 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <FilesTable data={data} />
-                </div>
+                </div> */}
+
+                {isComponentActive === "allfiles" && <AllFiles />}
+                {isComponentActive === "starred" && <Starred />}
+                {isComponentActive === "trash" && <Trash />}
               </section>
             </>
           ) : (

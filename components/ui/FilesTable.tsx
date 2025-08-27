@@ -71,7 +71,7 @@ export default function FilesTable({ data }: { data: FileData[] }) {
                 📄
               </div>
             )}
-            <span className="font-medium">{cleanedName}</span>
+            <span className="text-xs font-bold">{cleanedName}</span>
           </div>
         );
       },
@@ -81,12 +81,21 @@ export default function FilesTable({ data }: { data: FileData[] }) {
       cell: (info) => `${info.getValue()}`,
     }),
     columnHelper.accessor("size", {
-      header: "Size (KB)",
+      header: "Size",
       // cell: (info) => `${info.getValue()} KB`,
       cell: (info) => {
         const sizeInBytes = info.getValue();
         const sizeInKb = sizeInBytes / 1024;
-        return `${sizeInKb.toFixed()} KB`;
+
+        let displaySize;
+        if (sizeInKb > 1000) {
+          const sizeInMb = sizeInBytes / (1024 * 1024);
+          displaySize = `${sizeInMb.toFixed(2)} MB`;
+        } else {
+          displaySize = `${sizeInKb.toFixed(2)} KB`;
+        }
+
+        return <p className="text-sm">{displaySize}</p>;
       },
     }),
     columnHelper.accessor("createdAt", {
@@ -211,10 +220,11 @@ export default function FilesTable({ data }: { data: FileData[] }) {
         </tbody>
       </table>
 
-      <div>
+      <div className="flex items-center gap-2 justify-center p-2">
         <button
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
+          className="bg-purple-500 cursor-pointer rounded p-1 hover:bg-purple-400"
         >
           Previous
         </button>
@@ -225,6 +235,7 @@ export default function FilesTable({ data }: { data: FileData[] }) {
         <button
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
+          className="bg-purple-500 cursor-pointer rounded p-1 hover:bg-purple-400"
         >
           Next
         </button>
