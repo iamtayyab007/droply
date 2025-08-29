@@ -37,7 +37,7 @@ export async function PATCH(
     // toggle the star status
     const updatedFiles = await db
       .update(files)
-      .set({ isStarred: !files.isStarred })
+      .set({ isStarred: !file.isStarred })
       .where(and(eq(files.id, fileId), eq(files.userId, userId)))
       .returning();
 
@@ -48,5 +48,38 @@ export async function PATCH(
       { error: "Failed to update the file" },
       { status: 401 }
     );
+  }
+}
+
+export async function GET(props: { params: Promise<{ fileId: string }> }) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json(
+        {
+          error: "unauthorized",
+        },
+        { status: 401 }
+      );
+    }
+
+    const { fileId } = await props.params;
+    if (!fileId) {
+      return NextResponse.json(
+        { error: "File id is required" },
+        { status: 401 }
+      );
+    }
+    const [file] = await db
+      .select()
+      .from(files)
+      .where(and(eq(files.userId, userId), eq(files.isStarred, true)));
+
+    if (!file) {
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
+    }
+    return NextResponse.json(file);
+  } catch (error) {
+    return NextResponse.json({ error: "user id is required" }, { status: 401 });
   }
 }

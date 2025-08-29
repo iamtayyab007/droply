@@ -2,7 +2,7 @@ import React from "react";
 import FilesTable from "./ui/FilesTable";
 import axios from "axios";
 import { useUser } from "@clerk/nextjs";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ClipLoader } from "react-spinners";
 
 const AllFiles = () => {
@@ -14,6 +14,7 @@ const AllFiles = () => {
       const res = await axios.get(
         `/api/files?userId=${userId}&parentId=${parentId || ""}`
       );
+      console.log("response", res.data);
       return res.data;
     } catch (error) {
       console.log(error);
@@ -31,10 +32,12 @@ const AllFiles = () => {
   } = useQuery({
     queryKey: ["files", userId, parentId!],
     queryFn: fetchFiles,
-    enabled: isLoaded && !!userId, // still safe
-    refetchInterval: 5000,
-    refetchOnMount: true,
-    staleTime: 0,
+    enabled: isLoaded && !!userId,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData, // optional
   });
 
   if (!isLoaded) return <p>Loading user...</p>;

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FaStar } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa";
 import { FaDownload } from "react-icons/fa";
@@ -11,6 +11,10 @@ import {
   flexRender,
   getPaginationRowModel,
 } from "@tanstack/react-table";
+import { useStar } from "@/Context/GlobalContext";
+import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
+import { useUser } from "@clerk/nextjs";
 
 interface FileData {
   id: string;
@@ -20,16 +24,22 @@ interface FileData {
   fileUrl: string;
   createdAt: string;
   thumbnailUrl: string;
+  isStarred: boolean;
 }
 
 export default function FilesTable({ data }: { data: FileData[] }) {
+  const { user } = useUser();
+  const userId = user?.id ?? "";
+  const queryClient = useQueryClient();
+  const { selectedId, setSelectedId, isStarred, setIsStarred } = useStar();
+
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 5,
   });
+
   // handle download
   const handleDownload = async (linked: string) => {
-    console.log("info", linked);
     try {
       const response = await fetch(linked);
       const blob = await response.blob();
@@ -48,6 +58,29 @@ export default function FilesTable({ data }: { data: FileData[] }) {
     }
   };
 
+  // handle star
+  const handleStar = (id: string) => {
+    setSelectedId(id);
+
+    const fetchUpdatedStarred = async () => {
+      try {
+        const response = await axios.patch(`/api/files/${id}/star`);
+        const result = response.data;
+        const isStarred = result.isStarred;
+        setIsStarred(isStarred);
+        console.log("star", isStarred);
+        console.log("isStarredResponse", isStarred);
+        // ✅ Immediately invalidate cache so fetchFiles runs again
+        queryClient.invalidateQueries({
+          queryKey: ["files", userId],
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchUpdatedStarred();
+  };
+
   // ✅ Define columns
   const columnHelper = createColumnHelper<FileData>();
   const columns = [
@@ -57,6 +90,7 @@ export default function FilesTable({ data }: { data: FileData[] }) {
         const row = info.row.original; // Access full row data
         const originalName = row.name;
         const cleanedName = originalName.replace(/_[^_]+\.(\w+)$/, ".$1");
+        const isStarred = row.isStarred;
 
         return (
           <div className="flex items-center gap-3 w-full max-w-[450px]">
@@ -72,6 +106,7 @@ export default function FilesTable({ data }: { data: FileData[] }) {
               </div>
             )}
             <span className="text-xs font-bold">{cleanedName}</span>
+            <span>{isStarred ? <FaStar color="#d4af37" /> : ""}</span>
           </div>
         );
       },
@@ -127,7 +162,7 @@ export default function FilesTable({ data }: { data: FileData[] }) {
           const days = Math.floor(diffInSeconds / 86400);
           formattedTime = `Added ${days} day${days > 1 ? "s" : ""} ago`;
         }
-
+        console.log("selectedid", selectedId);
         return (
           <>
             <p className="text-xs font-bold">
@@ -158,8 +193,16 @@ export default function FilesTable({ data }: { data: FileData[] }) {
                 Download
               </button>
 
-              <button className="bg-blue-400 p-1 rounded no-underline text-black cursor-pointer flex items-center gap-1">
-                <FaStar /> Star
+              <button
+                className="bg-gray-700 p-1 rounded no-underline text-white cursor-pointer flex items-center gap-1"
+                onClick={() => handleStar(info.row.original.id)}
+              >
+                {info.row.original.isStarred ? (
+                  <FaStar color="#d4af37" />
+                ) : (
+                  <FaStar />
+                )}{" "}
+                {info.row.original.isStarred ? "Unstar" : "Star"}
               </button>
             </div>
 
@@ -178,12 +221,14 @@ export default function FilesTable({ data }: { data: FileData[] }) {
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+
     state: {
       pagination,
     },
     onPaginationChange: setPagination,
     getPaginationRowModel: getPaginationRowModel(),
     manualPagination: false, // Set true if using server-side pagination
+    autoResetPageIndex: false,
     pageCount: Math.ceil(data.length / pagination.pageSize),
   });
 
