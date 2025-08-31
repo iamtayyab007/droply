@@ -51,9 +51,10 @@ export async function PATCH(
   }
 }
 
-export async function GET(props: { params: Promise<{ fileId: string }> }) {
+export async function GET() {
   try {
     const { userId } = await auth();
+
     if (!userId) {
       return NextResponse.json(
         {
@@ -63,14 +64,7 @@ export async function GET(props: { params: Promise<{ fileId: string }> }) {
       );
     }
 
-    const { fileId } = await props.params;
-    if (!fileId) {
-      return NextResponse.json(
-        { error: "File id is required" },
-        { status: 401 }
-      );
-    }
-    const [file] = await db
+    const file = await db
       .select()
       .from(files)
       .where(and(eq(files.userId, userId), eq(files.isStarred, true)));
@@ -79,7 +73,10 @@ export async function GET(props: { params: Promise<{ fileId: string }> }) {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
     return NextResponse.json(file);
-  } catch (error) {
-    return NextResponse.json({ error: "user id is required" }, { status: 401 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.response?.message },
+      { status: 401 }
+    );
   }
 }

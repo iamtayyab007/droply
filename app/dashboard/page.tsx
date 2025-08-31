@@ -6,6 +6,7 @@ import Trash from "@/components/Trash";
 import FilesTable from "@/components/ui/FilesTable";
 import Uploader from "@/components/Uploader";
 import UploadFolder from "@/components/UploadFolder";
+import { useStar } from "@/Context/GlobalContext";
 import { cn } from "@/lib/utils";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
@@ -23,6 +24,7 @@ const Dashboard = () => {
   const userEmailAddress = user?.primaryEmailAddress?.emailAddress;
   const emailVerification = user?.primaryEmailAddress?.verification.status;
   const accountStatus = user?.id ? "Active" : "unactive";
+  const { allFilesData, starredData } = useStar();
 
   // const fetchFiles = async ({ queryKey }: { queryKey: string[] }) => {
   //   const [_key, userId, parentId] = queryKey;
@@ -160,7 +162,12 @@ const Dashboard = () => {
                       height={20}
                       className="filter invert brightness-0 hue-rotate-180"
                     />
-                    <h2>All Files</h2>
+                    <h2 className="cursor-pointer font-bold">All Files</h2>
+                    <span className="bg-amber-700 rounded p-1 text-white font-bold">
+                      {allFilesData && allFilesData.length > 0
+                        ? allFilesData.length
+                        : ""}
+                    </span>
                   </div>
                   <div
                     className={cn(
@@ -174,7 +181,12 @@ const Dashboard = () => {
                     }}
                   >
                     <FaStar />
-                    <h2>Starred</h2>
+                    <h2 className="cursor-pointer">Starred</h2>
+                    <span className="bg-amber-700 rounded p-1 text-white font-bold">
+                      {starredData && starredData.length > 0
+                        ? starredData.length
+                        : ""}
+                    </span>
                   </div>
                   <div
                     className={cn(
@@ -188,7 +200,7 @@ const Dashboard = () => {
                     }}
                   >
                     <FaTrash />
-                    <h2>Trash</h2>
+                    <h2 className="cursor-pointer">Trash</h2>
                   </div>
                 </div>
                 {/* <div className="flex justify-between p-5 border-b-2 border-gray-700 mb-5">
@@ -201,7 +213,11 @@ const Dashboard = () => {
                   <FilesTable data={data} />
                 </div> */}
 
-                {isComponentActive === "allfiles" && <AllFiles />}
+                {isComponentActive === "allfiles" && (
+                  <>
+                    <AllFiles />{" "}
+                  </>
+                )}
                 {isComponentActive === "starred" && <Starred />}
                 {isComponentActive === "trash" && <Trash />}
               </section>

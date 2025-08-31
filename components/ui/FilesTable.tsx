@@ -31,7 +31,13 @@ export default function FilesTable({ data }: { data: FileData[] }) {
   const { user } = useUser();
   const userId = user?.id ?? "";
   const queryClient = useQueryClient();
-  const { selectedId, setSelectedId, isStarred, setIsStarred } = useStar();
+  const {
+    selectedId,
+    setSelectedId,
+    isStarred,
+    setIsStarred,
+    setStarredFileId,
+  } = useStar();
 
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
@@ -162,7 +168,7 @@ export default function FilesTable({ data }: { data: FileData[] }) {
           const days = Math.floor(diffInSeconds / 86400);
           formattedTime = `Added ${days} day${days > 1 ? "s" : ""} ago`;
         }
-        console.log("selectedid", selectedId);
+
         return (
           <>
             <p className="text-xs font-bold">

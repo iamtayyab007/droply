@@ -1,24 +1,32 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useStar } from "@/Context/GlobalContext";
+import { useUser } from "@clerk/nextjs";
+import FilesTable from "./ui/FilesTable";
 
 const Starred = () => {
-  const { selectedId, setIsStarred } = useStar();
+  const { selectedId, starredFileId, isStarred, setStarredData, starredData } =
+    useStar();
+
+  const { user } = useUser();
+  const userId = user?.id;
 
   useEffect(() => {
     const fetchUpdatedStarred = async () => {
       try {
-        const response = await axios.get(`/api/files/${selectedId}/star`);
+        const response = await axios.get(`/api/files/${userId}/star`, {
+          withCredentials: true,
+        });
         const result = response.data;
-        const isStarred = result.isStarred;
-        setIsStarred(isStarred);
-        console.log("isStarredResponse", isStarred);
+
+        setStarredData(result);
       } catch (error) {
         console.log(error);
       }
     };
+
     fetchUpdatedStarred();
-  }, [selectedId]);
+  }, [selectedId, isStarred]);
 
   return (
     <div>
@@ -28,6 +36,7 @@ const Starred = () => {
           Refresh
         </button> */}
       </div>
+      <FilesTable data={starredData} />
     </div>
   );
 };

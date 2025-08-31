@@ -4,9 +4,11 @@ import axios from "axios";
 import { useUser } from "@clerk/nextjs";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ClipLoader } from "react-spinners";
+import { useStar } from "@/Context/GlobalContext";
 
 const AllFiles = () => {
   const { user, isLoaded } = useUser();
+  const { allFilesData, setAllFilesData } = useStar();
 
   const fetchFiles = async ({ queryKey }: { queryKey: string[] }) => {
     const [_key, userId, parentId] = queryKey;
@@ -14,7 +16,7 @@ const AllFiles = () => {
       const res = await axios.get(
         `/api/files?userId=${userId}&parentId=${parentId || ""}`
       );
-      console.log("response", res.data);
+      setAllFilesData(res.data);
       return res.data;
     } catch (error) {
       console.log(error);
@@ -37,6 +39,7 @@ const AllFiles = () => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
+    refetchInterval: 5000,
     placeholderData: keepPreviousData, // optional
   });
 
