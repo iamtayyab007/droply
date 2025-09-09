@@ -10,6 +10,8 @@ import {
   createColumnHelper,
   flexRender,
   getPaginationRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
 } from "@tanstack/react-table";
 import { useStar } from "@/Context/GlobalContext";
 import axios from "axios";
@@ -37,6 +39,8 @@ export default function FilesTable({ data }: { data: FileData[] }) {
     isStarred,
     setIsStarred,
     setStarredFileId,
+    updateStarredData,
+    setUpdateStarredData,
   } = useStar();
 
   const [pagination, setPagination] = React.useState({
@@ -67,20 +71,33 @@ export default function FilesTable({ data }: { data: FileData[] }) {
   // handle star
   const handleStar = (id: string) => {
     setSelectedId(id);
+    // const previousState = [...updateStarredData];
 
+    // const queryKey = ["files", userId];
+
+    // // ✅ Snapshot the previous data before changing
+    // const previousFiles = queryClient.getQueryData<any[]>(queryKey);
+
+    // // ✅ Optimistically update cache
+    // queryClient.setQueryData<any[]>(
+    //   queryKey,
+    //   (old) =>
+    //     old?.map((file) =>
+    //       file.id === id ? { ...file, isStarred: !file.isStarred } : file
+    //     ) || []
+    // );
     const fetchUpdatedStarred = async () => {
       try {
         const response = await axios.patch(`/api/files/${id}/star`);
         const result = response.data;
-        const isStarred = result.isStarred;
-        setIsStarred(isStarred);
-        console.log("star", isStarred);
-        console.log("isStarredResponse", isStarred);
-        // ✅ Immediately invalidate cache so fetchFiles runs again
+        const isItemStarred = result.isStarred;
+        setIsStarred(!isStarred);
+
         queryClient.invalidateQueries({
           queryKey: ["files", userId],
         });
       } catch (error) {
+        //queryClient.setQueryData(queryKey, previousFiles);
         console.log(error);
       }
     };
@@ -231,9 +248,12 @@ export default function FilesTable({ data }: { data: FileData[] }) {
     state: {
       pagination,
     },
+
     onPaginationChange: setPagination,
     getPaginationRowModel: getPaginationRowModel(),
+
     manualPagination: false, // Set true if using server-side pagination
+
     autoResetPageIndex: false,
     pageCount: Math.ceil(data.length / pagination.pageSize),
   });

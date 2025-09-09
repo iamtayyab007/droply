@@ -22,16 +22,19 @@ type ContextType = {
   setAllFilesData: (value: FileData[]) => void;
   starredData: FileData[];
   setStarredData: (value: FileData[]) => void;
+  updateStarredData: FileData[];
+  setUpdateStarredData: React.Dispatch<React.SetStateAction<FileData[]>>;
 };
 
 const StarContext = createContext<ContextType | undefined>(undefined);
 
 export const StarProvider = ({ children }: { children: React.ReactNode }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [isStarred, setIsStarred] = useState<boolean | null>(null);
+  const [isStarred, setIsStarred] = useState<boolean | null>(false);
   const [starredFileId, setStarredFileId] = useState<string | null>(null);
   const [allFilesData, setAllFilesData] = useState<FileData[]>([]);
   const [starredData, setStarredData] = useState<FileData[]>([]);
+  const [updateStarredData, setUpdateStarredData] = useState<FileData[]>([]);
 
   return (
     <StarContext.Provider
@@ -46,6 +49,8 @@ export const StarProvider = ({ children }: { children: React.ReactNode }) => {
         setAllFilesData,
         starredData,
         setStarredData,
+        updateStarredData,
+        setUpdateStarredData,
       }}
     >
       {children}

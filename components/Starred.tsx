@@ -5,8 +5,14 @@ import { useUser } from "@clerk/nextjs";
 import FilesTable from "./ui/FilesTable";
 
 const Starred = () => {
-  const { selectedId, starredFileId, isStarred, setStarredData, starredData } =
-    useStar();
+  const {
+    selectedId,
+    starredFileId,
+    isStarred,
+    setStarredData,
+    starredData,
+    updateStarredData,
+  } = useStar();
 
   const { user } = useUser();
   const userId = user?.id;
@@ -27,7 +33,7 @@ const Starred = () => {
 
     fetchUpdatedStarred();
   }, [selectedId, isStarred]);
-
+  console.log("isStarred", isStarred);
   return (
     <div>
       <div className="flex justify-between p-5 border-b-2 border-gray-700 mb-5">
