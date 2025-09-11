@@ -24,6 +24,8 @@ type ContextType = {
   setStarredData: (value: FileData[]) => void;
   updateStarredData: FileData[];
   setUpdateStarredData: React.Dispatch<React.SetStateAction<FileData[]>>;
+  deleteDataItems: FileData[];
+  setDeleteDataItems: React.Dispatch<React.SetStateAction<FileData[]>>;
 };
 
 const StarContext = createContext<ContextType | undefined>(undefined);
@@ -35,6 +37,7 @@ export const StarProvider = ({ children }: { children: React.ReactNode }) => {
   const [allFilesData, setAllFilesData] = useState<FileData[]>([]);
   const [starredData, setStarredData] = useState<FileData[]>([]);
   const [updateStarredData, setUpdateStarredData] = useState<FileData[]>([]);
+  const [deleteDataItems, setDeleteDataItems] = useState<FileData[]>([]);
 
   return (
     <StarContext.Provider
@@ -51,6 +54,8 @@ export const StarProvider = ({ children }: { children: React.ReactNode }) => {
         setStarredData,
         updateStarredData,
         setUpdateStarredData,
+        deleteDataItems,
+        setDeleteDataItems,
       }}
     >
       {children}

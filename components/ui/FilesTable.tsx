@@ -27,6 +27,7 @@ interface FileData {
   createdAt: string;
   thumbnailUrl: string;
   isStarred: boolean;
+  isTrash: boolean;
 }
 
 export default function FilesTable({ data }: { data: FileData[] }) {
@@ -42,7 +43,9 @@ export default function FilesTable({ data }: { data: FileData[] }) {
     updateStarredData,
     setUpdateStarredData,
   } = useStar();
-
+  const filteredData: FileData[] = data.filter(
+    (item): item is FileData => item.isTrash !== true
+  );
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 5,
@@ -102,6 +105,16 @@ export default function FilesTable({ data }: { data: FileData[] }) {
       }
     };
     fetchUpdatedStarred();
+  };
+
+  // Handle delete
+
+  const handleDelete = async (id: string) => {
+    try {
+      const response = axios.post("/api/files/${id}");
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   // ✅ Define columns
@@ -229,7 +242,10 @@ export default function FilesTable({ data }: { data: FileData[] }) {
               </button>
             </div>
 
-            <button className="bg-red-400 p-1 rounded no-underline text-black cursor-pointer flex items-center gap-1">
+            <button
+              className="bg-red-400 p-1 rounded no-underline text-black cursor-pointer flex items-center gap-1"
+              onClick={() => handleDelete(info.row.original.id)}
+            >
               <FaTrash />
               Delete
             </button>
@@ -241,7 +257,7 @@ export default function FilesTable({ data }: { data: FileData[] }) {
 
   // ✅ Create table instance
   const table = useReactTable({
-    data,
+    data: filteredData as FileData[],
     columns,
     getCoreRowModel: getCoreRowModel(),
 
