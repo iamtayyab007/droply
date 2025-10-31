@@ -63,7 +63,7 @@ const AllFiles = () => {
         </button>
       </div>
       <div>
-        <FilesTable data={data} />
+        <FilesTable data={data} filterType="all" />
       </div>
     </div>
   );

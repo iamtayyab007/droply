@@ -3,7 +3,6 @@ import { files } from "@/lib/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import { eq, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { file } from "zod";
 
 export async function PATCH(
   request: NextRequest,
@@ -51,8 +50,8 @@ export async function GET() {
     const result = await db
       .select()
       .from(files)
-      .where(eq(files.userId, userId));
-    const isTrash = result[0].isTrash;
+      .where(and(eq(files.userId, userId), eq(files.isTrash, true)));
+    const isTrash = result;
 
     return NextResponse.json(isTrash);
   } catch (error: any) {

@@ -30,7 +30,14 @@ interface FileData {
   isTrash: boolean;
 }
 
-export default function FilesTable({ data }: { data: FileData[] }) {
+interface FilesTableProps {
+  data: FileData[];
+  filterType: "all" | "trash" | "star";
+}
+export default function FilesTable({
+  data,
+  filterType = "all",
+}: FilesTableProps) {
   const { user } = useUser();
   const userId = user?.id ?? "";
   const queryClient = useQueryClient();
@@ -43,9 +50,15 @@ export default function FilesTable({ data }: { data: FileData[] }) {
     updateStarredData,
     setUpdateStarredData,
   } = useStar();
-  const filteredData: FileData[] = data.filter(
-    (item): item is FileData => item.isTrash !== true
-  );
+  let filteredData;
+  if (filterType === "trash") {
+    filteredData = (Array.isArray(data) ? data : []).filter(
+      (item): item is FileData => item.isTrash === true
+    );
+  } else {
+    filteredData = data.filter((item) => item.isTrash !== true);
+  }
+
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 5,
@@ -111,7 +124,9 @@ export default function FilesTable({ data }: { data: FileData[] }) {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = axios.post("/api/files/${id}");
+      const response = await axios.patch(`/api/files/${id}/trash`);
+      const result = await response.data;
+      console.log("trashResult", result);
     } catch (error) {
       console.log(error);
     }
