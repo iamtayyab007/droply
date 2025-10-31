@@ -32,7 +32,7 @@ interface FileData {
 
 interface FilesTableProps {
   data: FileData[];
-  filterType: "all" | "trash" | "star";
+  filterType?: "all" | "trash" | "star";
 }
 export default function FilesTable({
   data,
